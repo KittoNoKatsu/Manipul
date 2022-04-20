@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+
 import sys
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
@@ -5,6 +8,7 @@ from PyQt5.QtCore import QIODevice
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal as Signal
 from PyQt5.QtWidgets import QMainWindow, QTextEdit, QListWidget
+from PyQt5.QtWidgets import QFileDialog
 
 app = QtWidgets.QApplication([])
 ui = uic.loadUi("manipulator.ui")
@@ -57,7 +61,7 @@ ui.comL.addItems(portList)
    #     Listwi = QListWidget()
    #     self.(Listwi)
 
-    #    self.setCentralWidget(self.text_edit)
+   #    self.setCentralWidget(self.text_edit)
 
   #  def append_log(self, text, severity):
    #     text = repr(text)
@@ -81,11 +85,22 @@ def serialSend(data):
 
 def onRead():
     rx = serial.readLine()
-    rxs = str(rx, 'utf-8').strip()
-    #print(rxs)
+    #rxs = rx.decode('utf-8').strip("\r")
+    #rxs = str(rx, 'utf-8').strip()
+    rxs = str(rx, 'utf-8').split("\n")
+    #for i,r in  enumerate(rxs):
+    #    print(i, "->", r)
+    if "=" in rxs[0]:
+        print(rxs[0])
+        ar1 = rxs[0].split(" ")
+        for aar in ar1:
+            if "A" in aar:
+                va = aar.split("=")
+                ui.valA.setText(va[1])
+    #print(rxs[-2])
 
 def onOpen():
-    serial.setPortName(ui.comL.currentText())
+    serial.setPortName("/dev/" + ui.comL.currentText())
     serial.open(QIODevice.ReadWrite)
     #serial.write('90a'.encode())
     #print("rrr")
@@ -96,6 +111,8 @@ def onClose():
     #serial.write('b'.encode())
 
 def OpFile():
+    file_to_open_name = QFileDialog.getOpenFileName(caption = "выберите файл для проигрывания", directory = ".")
+    print("selected filename is ", file_to_open_name)
     #post = serial.readAll()
     #for i in post
     #print("post=", post)
@@ -106,10 +123,16 @@ def OpFile():
           #  serial.write(data.encode())
           #  print(line.strip())
         #print(data.strip())
-    with open("alfa_trajector.txt") as file:
-        data = file.read()
+    if file_to_open_name[0] == '':
+        print("nothing is selected")
+        return
+
+    #with open("alfa_trajector.txt") as file:
+    with open(file_to_open_name[0]) as _file:
+        data = _file.read()
         serial.write(data.encode())
         print(data)
+        ui.textEdit.setText( ui.textEdit.toPlainText( ) + data)
 
 def servoControlA(val):
     txs = ""
@@ -117,8 +140,8 @@ def servoControlA(val):
     txs += 'a'
     serial.write(txs.encode())
     print(txs)
-    v = serial.readAll()
-    print("v=", v)
+    #v = serial.readAll()
+    #print("v=", v)
     #rv = []
     #for i in v.split("\n")[-2].split(" "):
      #   ii = i.split("=")
@@ -131,36 +154,37 @@ def servoControlB(val):
     txs += str(val + 5)
     txs += 'b'
     serial.write(txs.encode())
-    print(txs)
-    v = serial.readAll()
-    print("v=", v)
+    #print(txs)
+    #v = serial.readAll()
+    #print("v=", v)
 
 def servoControlC(val):
     txs = ""
     txs += str(val + 5)
     txs += 'c'
+    print("avant envoie ", txs)
     serial.write(txs.encode())
-    print(txs)
-    v = serial.readAll()
-    print("v=", v)
+    #print(txs)
+    #v = serial.readAll()
+    #print("v=", v)
 
 def servoControlD(val):
     txs = ""
     txs += str(val + 5)
     txs += 'd'
     serial.write(txs.encode())
-    print(txs)
-    v = serial.readAll()
-    print("v=", v)
+    #print(txs)
+    #v = serial.readAll()
+    #print("v=", v)
 
 def servoControlE(val):
     txs = ""
     txs += str(val + 5)
     txs += 'e'
     serial.write(txs.encode())
-    print(txs)
-    v = serial.readAll()
-    print("v=", v)
+    #print(txs)
+    #v = serial.readAll()
+    #print("v=", v)
 
 def servoControlF(val):
     txs = ""
@@ -168,12 +192,12 @@ def servoControlF(val):
     txs += 'f'
     serial.write(txs.encode())
     print(txs)
-    v = serial.readAll()
-    print("v=", v)
+    #v = serial.readAll()
+    #print("v=", v)
 
 #def listing():
    # print("as")
-#serial.readyRead.connect(onRead)
+serial.readyRead.connect(onRead)
 ui.openB.clicked.connect(onOpen)
 ui.openFile.clicked.connect(OpFile)
 ui.closeB.clicked.connect(onClose)
