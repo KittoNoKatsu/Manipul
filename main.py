@@ -3,20 +3,12 @@ from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
 from PyQt5.QtCore import QIODevice
 from PyQt5.QtWidgets import QFileDialog
 
-app = QtWidgets.QApplication([])
-ui = uic.loadUi("manipulator.ui")
 
-serial = QSerialPort()
-serial.setBaudRate(115200)
-portList = []
-ports = QSerialPortInfo().availablePorts()
-for port in ports:
-    portList.append(port.portName())
-ui.comL.addItems(portList)
 
 class Servoprivod():
 
-    def __init__(self, ServoA, ServoB, ServoC, ServoD, ServoE, ServoF):
+    def __init__(self, serial, ServoA, ServoB, ServoC, ServoD, ServoE, ServoF):
+        self.serial = serial
         self.ServoA = ServoA
         self.ServoB = ServoB
         self.ServoC = ServoC
@@ -26,8 +18,8 @@ class Servoprivod():
 
 
     def onOpen(self):
-        serial.setPortName(ui.comL.currentText())
-        serial.open(QIODevice.ReadWrite)
+        self.serial.setPortName(ui.comL.currentText())
+        self.serial.open(QIODevice.ReadWrite)
         #serial.write('90a'.encode())
         #print("rrr")
 
@@ -77,7 +69,7 @@ class ReadServo():
         self.valF = valF
 
     def onRead(self):
-        rx = serial.readLine()
+        rx = self.serial.readLine()
         rxs = None
         try:
             rxs = str(rx, 'utf-8').split("\n")
@@ -113,7 +105,7 @@ class ReadServo():
                     va = aar.split("=")
                     ui.valF.setText(va[1])
 
-    serial.readyRead.connect(onRead)
+    self.serial.readyRead.connect(onRead)
 
 
 class ServoA(Servoprivod):
@@ -208,6 +200,21 @@ class ServoF(Servoprivod):
     ui.servoF.valueChanged.connect(servoControlF)
 
 
+def main():
+    serial = QSerialPort()
+    serial.setBaudRate(115200)
+    portList = []
+    ports = QSerialPortInfo().availablePorts()
+    for port in ports:
+        portList.append(port.portName())
+    app = QtWidgets.QApplication([])
+    ui = uic.loadUi("manipulator.ui")
 
-ui.show()
-app.exec()
+    ui.comL.addItems(portList)
+
+    ui.show()
+    app.exec()
+
+
+if __name__ == "__main__":
+    main()
